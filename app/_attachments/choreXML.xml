@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<chores>
+
+	<chore>
+		<key>43652</key>
+        <who>XML TEST DATA 1</who>
+        <chore>Dishes</chore>
+		<due>06/13/13</due>
+        <amount></amount>
+        <payto></payto>
+	</chore>
+	
+	<chore>
+		<key>24357</key>
+        <who>XML TEST DATA 2</who>
+        <chore>Comcast</chore>
+        <due>05/06/13</due>
+        <amount>87.50</amount>
+        <payto>Eric</payto>
+	</chore>
+	
+	<chore>
+		<key>83012</key>
+        <who>XML TEST DATA 3</who>
+        <chore>PGE</chore>
+        <due>07/06/13</due>
+        <amount>35.82</amount>
+        <payto>Jeff</payto>
+	</chore>
+	
+	<chore>
+		<key>08325</key>
+        <who>XML TEST DATA 4</who>
+        <chore>W/S/G</chore>
+        <due>07/08/13</due>
+        <amount>13.90</amount>
+        <payto>City</payto>
+	</chore>
+	
+	<chore>
+		<key>48142</key>
+        <who>XML TEST DATA 5</who>
+        <chore>Vacuum</chore>
+        <due></due>
+        <amount></amount>
+        <payto></payto>
+	</chore>
+	
+	<chore >
+		<key>29046</key>
+        <who>XML TEST DATA 6</who>
+        <chore>Feed fish</chore>
+        <due></due>
+        <amount></amount>
+        <payto></payto>
+	</chore>
+
+</chores>
