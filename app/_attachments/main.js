@@ -5,7 +5,8 @@ var editKey;
 $('#homePage').on('pageinit', function(){
     var contentDiv = $('#contentDiv');
     //Will fetch data from storage as soon as there is some to fetch
-    getLocal(contentDiv);
+    //getLocal(contentDiv);
+    getRemote(contentDiv);
 
     console.log("adding click event for editbtn");
 
@@ -24,8 +25,6 @@ $('#homePage').on('pageinit', function(){
 
 
     });
-
-
 
 });
 
@@ -249,5 +248,34 @@ var getJSON = function(choreDiv){
 
 
     })
+
+};
+
+var getRemote = function(choreDiv){
+
+    $.ajax({
+        "url": "_view/chores",
+        "dataType":"json",
+        "success": function(data){
+            choreDiv.append("<ul data-role='listview' data-theme='a' id='choreList'></ul>");
+            var choreList = $('#choreList');
+            $.each(data.rows,function(index,chore){
+                var key = chore.id;
+                console.log(chore);
+                choreList.append("<li>"+chore.value.who[0]+" "+chore.value.who[1]+"</li>");
+                choreList.append("<li>"+chore.value.chore[0]+" "+chore.value.chore[1]+"</li>");
+                choreList.append("<li>"+chore.value.due[0]+" "+chore.value.due[1]+"</li>");
+                choreList.append("<li>"+chore.value.amount[0]+" "+chore.value.amount[1]+"</li>");
+                choreList.append("<li>"+chore.value.payto[0]+" "+chore.value.payto[1]+"</li>");
+                choreList.append("<li><a href='#editPage' data-theme='a' class='editBtn' data-id="+ key +">Edit Item</a></li>");
+                choreList.append("<li><a href='#' data-inline='true' data-id="+key+" class = 'delBtn'> Delete Item</a></li>");
+                choreList.append("<p></p>");
+            });
+            choreList.listview('refresh');
+        }
+
+
+    });
+
 
 };

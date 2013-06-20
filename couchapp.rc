@@ -1,0 +1,10 @@
+{
+  "env": {
+    "local": {
+      "db": "http://127.0.0.1:5984/choredb"  
+    },
+    "cloudant":{
+            	"db":"https://gedgelyjancloredirrintio:JbYwDpamkMHjup67RyWAImw7@jenober.cloudant.com/choredb"
+    }
+  }
+}
