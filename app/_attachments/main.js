@@ -2,10 +2,11 @@
 // ASD 1306
 var editKey;
 
-$('#homePage').on('pageinit', function(){
+$(document).on('pageinit','#homePage',function(){
     var contentDiv = $('#contentDiv');
     //Will fetch data from storage as soon as there is some to fetch
     //getLocal(contentDiv);
+    console.log("Calling getRemote()");
     getRemote(contentDiv);
 
     console.log("adding click event for editbtn");
@@ -26,9 +27,14 @@ $('#homePage').on('pageinit', function(){
 
     });
 
+
+});
+$('#homePage').on('pageinit', function(){
+
+
 });
 
-$('#addNew').on('pageinit', function(){
+$(document).on('pageinit','#addNew', function(){
 
 console.log('addNew page init GOOD');
 
@@ -137,15 +143,23 @@ var storeData = function(){
     var itemID = Math.floor(Math.random() * 10001);
 
     var formData = {};
+    formData._id = itemID;
+    formData.who =  $('#inputWho').val();
+    formData.chore =  $('#inputChore').val();
+    formData.due = $('#inputDueDate').val();
+    formData.amount = $('#inputAmount').val();
+    formData.payto =$('#inputPayable').val();
 
-    formData.who = ["Responsible Party: ", $('#inputWho').val()];
-    formData.chore = ["Chore/Bill: ", $('#inputChore').val()];
-    formData.due = ["Due Date: ", $('#inputDueDate').val()];
-    formData.amount = ["Amount Due: ", $('#inputAmount').val()];
-    formData.payto = ["Payable To: ", $('#inputPayable').val()];
-
-    console.log('formData = '+ formData);
-    localStorage.setItem(itemID, JSON.stringify(formData));
+    console.log(formData);
+    $.couch.db("choredb").saveDoc(formData,{
+        success: function(data) {
+        console.log(data);
+        },
+        error: function(status) {
+        console.log(status)
+        }
+        });
+    //localStorage.setItem(itemID, JSON.stringify(formData));
     alert('Save Complete!');
 
 
@@ -252,7 +266,48 @@ var getJSON = function(choreDiv){
 };
 
 var getRemote = function(choreDiv){
+console.log("getRemote call successful!")
+//New couch plugin code
+console.log('beginning couch.db code!')
+    $.couch.db("choredb").view("app/chores",{
+        success: function(data){
+            console.log(data);
+            choreDiv.append("<ul data-role='listview' data-theme='a' id='choreList'></ul>");
+            var choreList = $('#choreList');
 
+            $.each(data.rows,function(index,chore){
+
+                var key = chore.id,
+                rev = chore.value.rev;
+                console.log('The key is: ' + key);
+                console.log('The revision #: '+ rev);
+                console.log('The index is: '+ index);
+                console.log(chore);
+                choreList.append("<li>"+chore.value.who[0]+" "+chore.value.who[1]+"</li>");
+                choreList.append("<li>"+chore.value.chore[0]+" "+chore.value.chore[1]+"</li>");
+                choreList.append("<li>"+chore.value.due[0]+" "+chore.value.due[1]+"</li>");
+                choreList.append("<li>"+chore.value.amount[0]+" "+chore.value.amount[1]+"</li>");
+                choreList.append("<li>"+chore.value.payto[0]+" "+chore.value.payto[1]+"</li>");
+                choreList.append($('<li>').append(
+                    $('<a>')
+                        .attr('href','editPage.html?key='+key)
+                        .attr('data-theme','a')
+                        .attr('class','editBtn')
+                        .text('Edit Item')
+                ));
+                choreList.append("<li><a href='#' data-inline='true' data-id="+key+" class = 'delBtn'> Delete Item</a></li>");
+                choreList.append("<p></p>");
+            });
+
+        }
+
+
+
+    });
+
+
+//Old Ajax code
+    /*
     $.ajax({
         "url": "_view/chores",
         "dataType":"json",
@@ -276,6 +331,7 @@ var getRemote = function(choreDiv){
 
 
     });
+    */
 
 
 };
