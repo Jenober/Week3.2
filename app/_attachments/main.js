@@ -150,12 +150,16 @@ var storeData = function(){
     formData.amount = $('#inputAmount').val();
     formData.payto =$('#inputPayable').val();
 
+    console.log("Begin Couch call!");
     console.log(formData);
+
     $.couch.db("choredb").saveDoc(formData,{
         success: function(data) {
+            console.log("couch call successful!")
         console.log(data);
         },
         error: function(status) {
+            console.log("couch call FAILED!")
         console.log(status)
         }
         });
