@@ -1,6 +1,6 @@
 // Houston Bennett
 // ASD 1306
-var editKey;
+var editID, editRev;
 
 $(document).on('pageinit','#homePage',function(){
     var contentDiv = $('#contentDiv');
@@ -8,37 +8,12 @@ $(document).on('pageinit','#homePage',function(){
     //getLocal(contentDiv);
     console.log("Calling getRemote()");
     getRemote(contentDiv);
-
-    console.log("adding click event for editbtn");
-
-    $('.editBtn').on('click', function () {
-        console.log('CLICKY CLICKY!!')
-        editKey = $(this).data('id');
-        console.log(editKey);
-    });
-
-    $('.delBtn').on('click', function(){
-        console.log("deleteItem function has been called by: " + this);
-        var key = $(this).data('id');
-        console.log("deleting item at key: "+ key);
-        localStorage.removeItem(key);
-        //alert('The item #' + key + ' had been deleted!!');
-
-
-    });
-
-
-});
-$('#homePage').on('pageinit', function(){
-
-
 });
 
 $(document).on('pageinit','#addNew', function(){
 
-console.log('addNew page init GOOD');
-
-var addForm = $('#addNewForm');
+    console.log('addNew page init GOOD');
+    var addForm = $('#addNewForm');
 
     addForm.validate({
         invalidHandler: function (form, validator){
@@ -50,18 +25,18 @@ var addForm = $('#addNewForm');
             console.log('The following is the serialized data: '+ formData);
             console.log('Sending data to storage!');
             storeData();
+            location.replace('index.html')
         }
     });
 
 
+
 });
 
-$('#editPage').on('pageinit',function(){
+$(document).on('pageinit','#editPage',function(){
     console.log('Edit page init GOOD');
 
-    var editForm = $('#editForm'),
-        data = localStorage.getItem(editKey),
-        fieldValues = JSON.parse(data);
+    var editForm = $('#editForm');
 
     editForm.validate({
         invalidHandler: function (form, validator){
@@ -72,38 +47,96 @@ $('#editPage').on('pageinit',function(){
             var formData = editForm.serializeArray();
             console.log('The following is the serialized data: '+ formData);
             console.log('Sending data to storage!');
-            saveEdits(editKey);
-
+            saveEdits(editID);
+            location.replace('index.html')
         }
     });
 
-    $('#editWho').val(fieldValues.who[1]);
-    $('#editChore').val(fieldValues.chore[1]);
-    $('#editDueDate').val(fieldValues.due[1]);
-    $('#editAmount').val(fieldValues.amount[1]);
-    $('#editPayable').val(fieldValues.payto[1]);
+
+    console.log("Global Var editID:")
+    console.log(editID);
+    console.log("Global Var editRev:")
+    console.log(editRev);
+    $.couch.db("choredb").view("app/chores",{
+        key: editID,
+        success: function(data){
+            console.log(data);
+            $.each(data.rows,function(index,chore){
+                $('#editWho').val(chore.value.who);
+                $('#editChore').val(chore.value.chore);
+                $('#editDueDate').val(chore.value.due);
+                $('#editAmount').val(chore.value.amount);
+                $('#editPayable').val(chore.value.payto);
+
+            });
+
+        }
+
+
+
+    });
 
 
 });
 
-$('.xmlBtn').on('click', function(){
-    var contentDiv = $('#contentDiv');
-    console.log('XML BUTTON CLICKED!')
-    //Remove list from initial page load
-    contentDiv.empty();
-    //Fill in new list from XML file!
-    getXML(contentDiv);
+$(document).on('click','.editBtn', function () {
+    console.log('CLICKY CLICKY!!')
+    editID = $(this).data('id');
+    editRev = $(this).data('rev');
+    console.log(editID);
 });
 
-$('.jsonBtn').on('click', function(){
-    var contentDiv = $('#contentDiv');
-    //Remove list from initial page load
-    contentDiv.empty();
-    //Fill in new list from JSON file!
-    getJSON(contentDiv);
+$(document).on('click','.delBtn', function(){
+    console.log("deleteItem function has been called by: " + this);
+    editID = $(this).data('id');
+    editRev = $(this).data('rev');
+    console.log("deleting item at key: "+ editID);
+    //alert('The item #' + key + ' had been deleted!!');
+    if(confirm('Are you sure you want to delete this item?')){
+        console.log(editID)
+        console.log(editRev)
+        $.couch.db("choredb").removeDoc({_id:editID,_rev:editRev});
+        alert('The item has been deleted!')
+        location.reload(true);
+    }else{
+        alert('Good idea.')
+    }
+
+
+
 });
 
 
+$('#submit').on('click',function(){
+
+
+
+});
+
+var parseUrl = function(){
+    var wholeUrl = $($.mobile.activePage).data("url");
+    console.log("Var wholeUrl contains:")
+    console.log(wholeUrl);
+    var splitUrl = wholeUrl.split('?');
+    console.log("Var splitUrl contains:")
+    console.log(splitUrl);
+    var urlPairs = splitUrl[1].split('&');
+    console.log("Var urlPairs contains:")
+    console.log(urlPairs);
+    var urlKeyVal = {};
+
+    for(var i in urlPairs){
+        var keyVal = urlPairs[pair].split('=');
+        var key = decodeURIComponent(keyVal[0]);
+        var val = decodeURIComponent(keyVal[1]);
+        urlKeyVal[key]= val;
+
+    }
+    return urlKeyVal;
+
+
+
+};
 var getLocal = function(choreDiv){
 
     if (localStorage.length === 0){
@@ -143,7 +176,7 @@ var storeData = function(){
     var itemID = Math.floor(Math.random() * 10001);
 
     var formData = {};
-    formData._id = itemID;
+    formData._id = "chore"+ itemID;
     formData.who =  $('#inputWho').val();
     formData.chore =  $('#inputChore').val();
     formData.due = $('#inputDueDate').val();
@@ -171,101 +204,33 @@ var storeData = function(){
 };
 
 var saveEdits = function(key){
+
+    alert("saveEdit function is being passed: "+ key)
     var formData = {};
+    formData._id = key;
+    formData.who =  $('#editWho').val();
+    formData.chore =  $('#editChore').val();
+    formData.due = $('#editDueDate').val();
+    formData.amount = $('#editAmount').val();
+    formData.payto =$('#editPayable').val();
 
-    formData.who = ["Responsible Party: ", $('#editWho').val()];
-    formData.chore = ["Chore/Bill: ", $('#editChore').val()];
-    formData.due = ["Due Date: ", $('#editDueDate').val()];
-    formData.amount = ["Amount Due: ", $('#editAmount').val()];
-    formData.payto = ["Payable To: ", $('#editPayable').val()];
+    console.log("Begin Couch call!");
+    console.log(formData);
 
-    console.log('formData = '+ formData);
-    localStorage.setItem(key, JSON.stringify(formData));
+    $.couch.db("choredb").removeDoc({_id:editID,_rev:editRev});
+
+    $.couch.db("choredb").saveDoc(formData,{
+        success: function(data) {
+            console.log("couch call successful!")
+            console.log(data);
+        },
+        error: function(status) {
+            console.log("couch call FAILED!")
+            console.log(status)
+        }
+    });
+    //localStorage.setItem(itemID, JSON.stringify(formData));
     alert('Save Complete!');
-
-};
-
-var getXML = function(choreDiv){
-
-    console.log('getXML called!');
-    choreDiv.append('<ul data-role="listview" data-theme="a" id="choreList"></ul>');
-
-    $.ajax({
-        url: 'choreXML.xml',
-        type: 'GET',
-        dataType: 'xml',
-        success: function(xml){
-            console.log("AJAX call successful");
-            console.log(xml);
-
-            $(xml).find('chore').each(function(){
-
-                var doc = $(this),
-                    choreList = $('#choreList');
-
-                var listItem = "Responsible Party: "+ doc.find('who').text();
-                choreList.append('<li>'+listItem+'</li>');
-
-                listItem = "Chore/Bill: "+ doc.find('chore').text();
-                choreList.append('<li>'+listItem+'</li>');
-
-                listItem = "Due Date: "+ doc.find('due').text();
-                choreList.append('<li>'+listItem+'</li>');
-
-                listItem = "Amount Due: "+ doc.find('amount').text();
-                choreList.append('<li>'+listItem+'</li>');
-
-                listItem = "Payable To: "+ doc.find('payto').text();
-                choreList.append('<li>'+listItem+'</li>');
-                choreList.append('<p></p>')
-
-            });
-            //$('choreList').listview('refresh');
-
-
-        },
-        error: function(error, parsererror){
-            alert("someting went wrong!");
-            console.log(error);
-            console.log(parsererror);
-        }
-
-
-    })
-
-
-};
-
-var getJSON = function(choreDiv){
-    console.log('getXML called!');
-    choreDiv.append('<ul data-role="listview" data-theme="a" id="choreList"></ul>');
-
-    $.ajax({
-        url: 'Default.json',
-        type: 'GET',
-        dataType: 'json',
-        success: function(json){
-            console.log("AJAX call successful");
-            console.log(json);
-            var chorelist = $('#choreList');
-            for(var key in json){
-                var each = json[key];
-                for (var chore in each){
-                    chorelist.append("<li>"+each[chore][0]+" "+ each[chore][1]+"</li>")
-                }
-                chorelist.append('<p></p>');
-            }
-
-
-        },
-        error: function(error, parsererror){
-            alert("someting went wrong!");
-            console.log(error);
-            console.log(parsererror);
-        }
-
-
-    })
 
 };
 
@@ -273,6 +238,7 @@ var getRemote = function(choreDiv){
 console.log("getRemote call successful!")
 //New couch plugin code
 console.log('beginning couch.db code!')
+
     $.couch.db("choredb").view("app/chores",{
         success: function(data){
             console.log(data);
@@ -287,19 +253,30 @@ console.log('beginning couch.db code!')
                 console.log('The revision #: '+ rev);
                 console.log('The index is: '+ index);
                 console.log(chore);
-                choreList.append("<li>"+chore.value.who[0]+" "+chore.value.who[1]+"</li>");
-                choreList.append("<li>"+chore.value.chore[0]+" "+chore.value.chore[1]+"</li>");
-                choreList.append("<li>"+chore.value.due[0]+" "+chore.value.due[1]+"</li>");
-                choreList.append("<li>"+chore.value.amount[0]+" "+chore.value.amount[1]+"</li>");
-                choreList.append("<li>"+chore.value.payto[0]+" "+chore.value.payto[1]+"</li>");
+                choreList.append("<li>"+chore.value.who+"</li>");
+                choreList.append("<li>"+chore.value.chore+"</li>");
+                choreList.append("<li>"+chore.value.due+"</li>");
+                choreList.append("<li>"+chore.value.amount+"</li>");
+                choreList.append("<li>"+chore.value.payto+"</li>");
                 choreList.append($('<li>').append(
                     $('<a>')
-                        .attr('href','editPage.html?key='+key)
+                        .attr('href','#editPage')
                         .attr('data-theme','a')
                         .attr('class','editBtn')
+                        .attr('data-id',key)
+                        .attr('data-rev',rev)
                         .text('Edit Item')
                 ));
-                choreList.append("<li><a href='#' data-inline='true' data-id="+key+" class = 'delBtn'> Delete Item</a></li>");
+                choreList.append($('<li>').append(
+                    $('<a>')
+                        .attr('href','#')
+                        .attr('data-theme','a')
+                        .attr('class','delBtn')
+                        .attr('data-id',key)
+                        .attr('data-rev',rev)
+                        .text('Delete Item')
+                ));
+
                 choreList.append("<p></p>");
             });
 
